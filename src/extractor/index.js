@@ -7,7 +7,6 @@ async function extract() {
   
   console.log(`   Looking in: ${inputPath}`);
   
-  // Find only the main page file
   const files = glob.sync('src/routes/index.{jsx,js,tsx,ts}', { 
     cwd: inputPath
   });
@@ -25,8 +24,14 @@ async function extract() {
 
   for (const file of files) {
     const fullPath = path.join(inputPath, file);
-    const content = await fs.readFile(fullPath, 'utf8');
+    const raw = await fs.readFile(fullPath, 'utf8');
     
+    // Force space between all words split across lines
+    const content = raw
+      .split('\n')
+      .map(line => line.trim())
+      .join(' ');
+
     // Extract TITLE and DESCRIPTION constants
     const titleMatch = content.match(/const TITLE\s*=\s*["'`]([^"'`]+)["'`]/);
     const descMatch = content.match(/const DESCRIPTION\s*=\s*["'`]([^"'`]+)["'`]/);
@@ -54,7 +59,11 @@ async function extract() {
     for (const match of sectionMatches) {
       const headingMatch = match[0].match(/<h2[^>]*>\s*(?:<span[^>]*>)?([^<]+)(?:<\/span>)?\s*<\/h2>/);
       const heading = headingMatch ? headingMatch[1].trim() : '';
-      const body = match[1] ? match[1].replace(/<[^>]+>/g, '').trim() : '';
+      const bodyRaw = match[1] || '';
+      const body = bodyRaw
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
       if (heading) {
         extracted.sections.push({ heading, body });
       }

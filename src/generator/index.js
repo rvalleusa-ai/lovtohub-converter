@@ -43,7 +43,7 @@ async function generateLandingPage(mapped, outputPath) {
 `;
   }
 
-  // Content sections
+  // Content sections - pass body through as-is, respect spaces
   for (const [i, section] of mapped.sections.entries()) {
     html += `
   {%- module "content_section_${i + 1}"
