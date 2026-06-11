@@ -49,10 +49,11 @@ ${requireCss}
 
   // Content sections
   for (const [i, section] of mapped.sections.entries()) {
+    const intro = section.params.body ? `<p>${section.params.body}</p>` : '';
     html += `{%- module "content_section_${i + 1}"
     path="../modules/rhs-content.module"
     heading="${section.params.heading}"
-    body="${section.params.body}"
+    intro="${intro}"
 -%}
 
 `;
@@ -74,7 +75,7 @@ ${requireCss}
     html += `{%- module "cta"
     path="../modules/rhs-cta.module"
     heading="${mapped.cta.params.heading}"
-    body="${mapped.cta.params.body}"
+    intro="<p>${mapped.cta.params.body}</p>"
     cta_text="${mapped.cta.params.cta_text}"
     cta_url="${mapped.cta.params.cta_url}"
 -%}
