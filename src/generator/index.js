@@ -15,71 +15,74 @@ async function generate(mapped) {
   await generateCSS(outputPath);
 
   console.log('   ✅ landing-page.html generated');
-  console.log('   ✅ main.css generated');
+  console.log('   ✅ lovabletohub-landing.css generated');
 }
 
 async function generateLandingPage(mapped, outputPath) {
+  const requireCss = '{{ require_css(get_asset_url("../css/lovabletohub-landing.css")) }}';
+
   let html = `<!--
-  LovToHub Converter Output
-  Title: ${mapped.title}
-  Generated: ${new Date().toISOString()}
+  templateType: page
+  isAvailableForNewContent: true
+  label: LovToHub Landing Page
 -->
+{% extends "./layouts/base.html" %}
 
-{{ require_css(get_asset_url('../css/main.css')) }}
+{% block body %}
 
-<div class="page-wrapper">
+${requireCss}
+
 `;
 
   // Hero module
   if (mapped.hero) {
-    html += `
-  {%- module "hero"
-      path="./modules/rhs-hero.module"
-      heading="${mapped.hero.params.heading}"
-      subheading="${mapped.hero.params.subheading}"
-      cta_text="${mapped.hero.params.cta_text}"
-      cta_url="${mapped.hero.params.cta_url}"
-  -%}
+    html += `{%- module "hero"
+    path="../modules/rhs-hero.module"
+    heading="${mapped.hero.params.heading}"
+    subheading="${mapped.hero.params.subheading}"
+    cta_text="${mapped.hero.params.cta_text}"
+    cta_url="${mapped.hero.params.cta_url}"
+-%}
+
 `;
   }
 
-  // Content sections - pass body through as-is, respect spaces
+  // Content sections
   for (const [i, section] of mapped.sections.entries()) {
-    html += `
-  {%- module "content_section_${i + 1}"
-      path="./modules/rhs-content.module"
-      heading="${section.params.heading}"
-      body="${section.params.body}"
-  -%}
+    html += `{%- module "content_section_${i + 1}"
+    path="../modules/rhs-content.module"
+    heading="${section.params.heading}"
+    body="${section.params.body}"
+-%}
+
 `;
   }
 
   // FAQ module
   if (mapped.faq) {
-    html += `
-  {%- module "faq"
-      path="./modules/rhs-faq.module"
-      heading="${mapped.faq.params.heading}"
-      items=${JSON.stringify(mapped.faq.params.items)}
-  -%}
+    html += `{%- module "faq"
+    path="../modules/rhs-faq.module"
+    heading="${mapped.faq.params.heading}"
+    items=${JSON.stringify(mapped.faq.params.items)}
+-%}
+
 `;
   }
 
   // CTA module
   if (mapped.cta) {
-    html += `
-  {%- module "cta"
-      path="./modules/rhs-cta.module"
-      heading="${mapped.cta.params.heading}"
-      body="${mapped.cta.params.body}"
-      cta_text="${mapped.cta.params.cta_text}"
-      cta_url="${mapped.cta.params.cta_url}"
-  -%}
+    html += `{%- module "cta"
+    path="../modules/rhs-cta.module"
+    heading="${mapped.cta.params.heading}"
+    body="${mapped.cta.params.body}"
+    cta_text="${mapped.cta.params.cta_text}"
+    cta_url="${mapped.cta.params.cta_url}"
+-%}
+
 `;
   }
 
-  html += `
-</div>`;
+  html += `{% endblock body %}`;
 
   await fs.writeFile(
     path.join(outputPath, 'templates', 'landing-page.html'),
@@ -89,143 +92,174 @@ async function generateLandingPage(mapped, outputPath) {
 
 async function generateCSS(outputPath) {
   const css = `/*
-  LovToHub Converter Output
-  Generated: ${new Date().toISOString()}
+  LovToHub Converter — lovabletohub-landing.css
   Scale: 100%
 */
 
-/* Base Reset */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ── Tokens ── */
+:root {
+  --color-hero:        #0b1f3a;
+  --color-highlight:   #c0392b;
+  --color-bg:          #ffffff;
+  --color-bg-alt:      #f4f6f9;
+  --color-fg:          #1a1a2e;
+  --color-muted:       #5a6a7a;
+  --color-border:      #dde3ea;
+  --font-sans:         'Inter', system-ui, sans-serif;
+  --radius:            6px;
+  --max-w-narrow:      760px;
+  --max-w-wide:        1100px;
+  --section-py:        80px;
 }
 
-/* Typography */
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
-  line-height: 1.6;
-  color: #333;
+  line-height: 1.7;
+  color: var(--color-fg);
+  background: var(--color-bg);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  line-height: 1.2;
-  margin-bottom: 1rem;
+h1, h2, h3, h4 {
+  line-height: 1.25;
+  font-weight: 700;
+  margin-bottom: .75rem;
 }
 
-/* Page Wrapper */
-.page-wrapper {
+p { margin-bottom: 1rem; }
+a { color: var(--color-highlight); }
+
+/* ── Container ── */
+.container-page {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+  max-width: var(--max-w-wide);
+  margin-inline: auto;
+  padding-inline: 24px;
 }
 
-/* Hero Section */
-.hero-section {
-  padding: 80px 0;
+/* ── Hero ── */
+.rhs-hero {
+  position: relative;
+  background: var(--color-hero);
+  color: #fff;
+  padding: var(--section-py) 0;
   text-align: center;
-  background: #0057b8;
+  overflow: hidden;
+}
+
+.rhs-hero h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
   color: #fff;
 }
 
-.hero-section h1 {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+.rhs-hero .subheading {
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  color: var(--color-highlight);
+  font-weight: 600;
+  margin-bottom: 1.25rem;
 }
 
-.hero-section p {
-  font-size: 1.25rem;
-  margin-bottom: 2rem;
-  opacity: 0.85;
+.rhs-hero p {
+  max-width: 680px;
+  margin-inline: auto;
+  opacity: .85;
+  font-size: 1.05rem;
 }
 
-/* Content Section */
-.content-section {
-  padding: 60px 0;
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 32px;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity .2s;
 }
 
-.content-section h2 {
-  font-size: 2rem;
-  font-weight: 700;
+.btn:hover { opacity: .88; }
+.btn-primary { background: var(--color-highlight); color: #fff; }
+.btn-outline  { border: 2px solid #fff; color: #fff; background: transparent; }
+
+/* ── Content sections ── */
+.rhs-section {
+  padding: var(--section-py) 0;
+}
+
+.rhs-section--alt {
+  background: var(--color-bg-alt);
+}
+
+.rhs-section h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
   text-align: center;
   margin-bottom: 1.5rem;
 }
 
-/* FAQ Section */
-.faq-section {
-  padding: 60px 0;
-  background: #f9f9f9;
+.rhs-section p {
+  max-width: var(--max-w-narrow);
+  margin-inline: auto;
+  color: var(--color-muted);
+  text-align: center;
 }
 
-.faq-section h2 {
-  font-size: 2rem;
-  font-weight: 700;
+/* ── FAQ ── */
+.rhs-faq {
+  padding: var(--section-py) 0;
+  background: var(--color-bg-alt);
+}
+
+.rhs-faq h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
   text-align: center;
   margin-bottom: 2rem;
 }
 
 .faq-item {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
   padding: 1.25rem 0;
 }
 
 .faq-item h3 {
   font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: .5rem;
 }
 
 .faq-item p {
-  font-size: 0.95rem;
-  color: #6b7280;
+  font-size: .95rem;
+  color: var(--color-muted);
 }
 
-/* CTA Section */
-.cta-section {
-  padding: 80px 0;
-  text-align: center;
-  background: #0057b8;
+/* ── CTA ── */
+.rhs-cta {
+  padding: var(--section-py) 0;
+  background: var(--color-hero);
   color: #fff;
+  text-align: center;
 }
 
-.cta-section h2 {
-  font-size: 2rem;
-  font-weight: 700;
+.rhs-cta h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: #fff;
   margin-bottom: 1rem;
 }
 
-/* Buttons */
-.btn {
-  display: inline-block;
-  padding: 14px 32px;
-  border-radius: 4px;
-  font-size: 16px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.btn:hover {
-  opacity: 0.9;
-}
-
-.btn-primary {
-  background: #0057b8;
-  color: #fff;
-}
-
-.btn-white {
-  background: #fff;
-  color: #0057b8;
+.rhs-cta p {
+  opacity: .8;
+  margin-bottom: 2rem;
+  font-size: 1.05rem;
 }
 `;
 
   await fs.writeFile(
-    path.join(outputPath, 'css', 'main.css'),
+    path.join(outputPath, 'css', 'lovabletohub-landing.css'),
     css
   );
 }
